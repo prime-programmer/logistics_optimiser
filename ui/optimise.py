@@ -6,6 +6,7 @@ from algorithms.random_search import random_search_algo
 from algorithms.hill_climbing import hill_climbing_algo
 from algorithms.genetic_algorithm import ga_algo
 from algorithms.ortools_solver import ortools_solve
+from services.openrouteservice import get_ors_route_geometry
 
 def render_optimise_section():
     st.markdown("---")
@@ -71,13 +72,29 @@ def render_optimise_section():
         det = solution_details(best_sol[0], best_sol[1], D, w1_idx, w2_idx,
                                st.session_state.van_rate_live, st.session_state.lorry_rate_live)
 
-        def remap_routes(routes, widx):
-            return [([store_ids[c] for c in chunk], vtype, miles, cost, widx) for (chunk, vtype, miles, cost) in routes]
+     
 
-        routes_w1 = remap_routes(det["r1"], w1_idx)
-        routes_w2 = remap_routes(det["r2"], w2_idx)
+        def remap_routes(routes, w_label):
+            out = []
+            for (chunk, vtype, miles, cost) in routes:
+                real_chunk = [store_ids[c] for c in chunk]
+                # Build coordinate list: Warehouse -> Stores -> Warehouse
+                route_coords = [warehouses[w_label]] + [stores[s] for s in real_chunk] + [warehouses[w_label]]
+                
+                geometry = None
+                if st.session_state.ors_key:
+                    # Fetch the curvy road data
+                    geometry = get_ors_route_geometry(tuple(route_coords), st.session_state.ors_key)
+                    
+                # We now return 6 variables instead of 5
+                out.append((real_chunk, vtype, miles, cost, w_label, geometry))
+            return out
 
-        loc_by_widx = {w1_idx: warehouses["W1"], w2_idx: warehouses["W2"]}
+        routes_w1 = remap_routes(det["r1"], "W1")
+        routes_w2 = remap_routes(det["r2"], "W2")
+
+        # Fixed: Use explicit strings "W1" and "W2" to avoid overwriting Store ID 10
+        loc_by_widx = {"W1": warehouses["W1"], "W2": warehouses["W2"]}
         loc_by_sid  = {store_ids[i]: all_locs[i] for i in range(n_stores)}
 
         st.session_state.results = {
@@ -97,3 +114,5 @@ def render_optimise_section():
             "tw_windows": st.session_state.get("tw_windows", {})
         }
         st.success("Optimisation complete! See **Results** tab.")
+
+       

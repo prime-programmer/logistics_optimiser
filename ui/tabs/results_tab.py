@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from streamlit_folium import st_folium
 from visualisation.maps import build_map
 from visualisation.dashboard import render_results_metrics, render_route_breakdown
@@ -26,9 +27,23 @@ def render_results_tab():
     render_route_breakdown(res, st.session_state.van_mpg, st.session_state.lorry_mpg)
     
     st.markdown("### Convergence")
-    chart_data = {
-        "RS": res["rs_hist"],
-        "HC": res["hc_hist"],
-        "GA": res["ga_hist"],
-    }
+    
+    # 1. Find out which algorithm ran for the most steps
+    max_len = max(len(res["rs_hist"]), len(res["hc_hist"]), len(res["ga_hist"]))
+    
+    # 2. Helper function to pad shorter arrays so they match max_len
+    # (It just repeats the final "best" score so the line stays flat on the chart)
+    def pad_history(hist_list, target_length):
+        if not hist_list:
+            return []
+        return hist_list + [hist_list[-1]] * (target_length - len(hist_list))
+        
+    # 3. Build a proper Pandas DataFrame
+    chart_data = pd.DataFrame({
+        "Random Search": pad_history(res["rs_hist"], max_len),
+        "Hill Climbing": pad_history(res["hc_hist"], max_len),
+        "Genetic Algorithm": pad_history(res["ga_hist"], max_len)
+    })
+    
+    # 4. Draw the fixed chart
     st.line_chart(chart_data)

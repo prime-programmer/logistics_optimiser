@@ -19,7 +19,8 @@ def render_results_metrics(res, van_mpg, lorry_mpg):
     st.subheader("🌍 Environmental Impact")
 
     total_emissions = 0.0
-    for chunk, vtype, miles, cost, widx in res["routes_w1"] + res["routes_w2"]:
+    # Fixed: Added the 6th variable '_' to unpack the geometry data without crashing
+    for chunk, vtype, miles, cost, widx, _ in res["routes_w1"] + res["routes_w2"]:
         mpg = van_mpg if vtype == "Van" else lorry_mpg
         emissions = calculate_emissions(miles, mpg, res["fuel_type"])
         total_emissions += emissions
@@ -36,7 +37,7 @@ def render_route_breakdown(res, van_mpg, lorry_mpg):
     for wlabel, routes, subtotal in [("W1", res["routes_w1"], det["c1"]),
                                       ("W2", res["routes_w2"], det["c2"])]:
         with st.expander(f"**{wlabel}** — {len(routes)} vehicle(s) — Subtotal: £{subtotal:.2f}"):
-            for i, (chunk, vtype, miles, cost, _) in enumerate(routes, 1):
+            for i, (chunk, vtype, miles, cost, _, _) in enumerate(routes, 1):
                 rate = res["van_rate"] if vtype == "Van" else res["lorry_rate"]
                 mpg = van_mpg if vtype == "Van" else lorry_mpg
                 route_emissions = calculate_emissions(miles, mpg, res["fuel_type"])

@@ -1,3 +1,6 @@
+import numpy as np
+import math
+
 def euclidean_distance_matrix(locations):
     """Fallback Euclidean distances (treated as km, then converted to rough miles)."""
     n = len(locations)
@@ -12,5 +15,3 @@ def euclidean_distance_matrix(locations):
             km   = math.sqrt(dlat**2 + dlon**2)
             D[i][j] = km * 0.621371
     return D
-
-

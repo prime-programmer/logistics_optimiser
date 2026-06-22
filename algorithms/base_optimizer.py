@@ -1,3 +1,6 @@
+import random
+import config
+
 # Route Helpers 
 def route_dist(chunk, warehouse_idx, D):
     if not chunk:
@@ -32,11 +35,16 @@ def best_vehicle_split(stores, warehouse_idx, D, van_rate, lorry_rate):
     dp_routes = [None] * (n+1)
     dp_cost[0]   = 0.0
     dp_routes[0] = []
+    
     for i in range(1, n+1):
-        for j in range(max(0, i-LORRY_MAX), i):
+        # Changed LORRY_MAX to config.LORRY_MAX
+        for j in range(max(0, i - config.LORRY_MAX), i):
             chunk = stores[j:i]
             miles = route_dist(chunk, warehouse_idx, D)
-            rate, vtype = (van_rate, 'Van') if len(chunk) <= VAN_MAX else (lorry_rate, 'Lorry')
+            
+            # Changed VAN_MAX to config.VAN_MAX
+            rate, vtype = (van_rate, 'Van') if len(chunk) <= config.VAN_MAX else (lorry_rate, 'Lorry')
+            
             total = dp_cost[j] + miles * rate
             if total < dp_cost[i]:
                 opt_chunk = two_opt(list(chunk), warehouse_idx, D)
@@ -44,8 +52,8 @@ def best_vehicle_split(stores, warehouse_idx, D, van_rate, lorry_rate):
                 opt_cost  = opt_miles * rate
                 dp_cost[i]   = dp_cost[j] + opt_cost
                 dp_routes[i] = dp_routes[j] + [(opt_chunk, vtype, opt_miles, opt_cost)]
+                
     return dp_cost[n], dp_routes[n]
-
 
 def evaluate(assignment, perm, D, w1_idx, w2_idx, van_rate, lorry_rate):
     w1 = [perm[i] for i in range(len(perm)) if assignment[i] == 0]

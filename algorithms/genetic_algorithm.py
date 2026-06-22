@@ -17,10 +17,23 @@ def ga_algo(D, w1_idx, w2_idx, van_rate, lorry_rate, n_stores, pop=80, gens=150,
         
         while len(children) < pop - len(elite):
             pa, pb = random.sample(elite, 2)
-            # Crossover
+            
+            # 1. Crossover for assignments (Binary array - standard slice is fine)
             cut = random.randrange(n_stores)
             ca  = pa[0][:cut] + pb[0][cut:]
-            cp  = pa[1][:cut] + pb[1][cut:]
+            
+            # 2. Crossover for permutations (Order Crossover to prevent missing stores)
+            start, end = sorted(random.sample(range(n_stores), 2))
+            cp = [-1] * n_stores
+            cp[start:end] = pa[1][start:end]
+            
+            pb_filtered = [x for x in pb[1] if x not in cp]
+            idx = 0
+            for i in range(n_stores):
+                if cp[i] == -1:
+                    cp[i] = pb_filtered[idx]
+                    idx += 1
+            
             # Mutation
             if random.random() < mr:
                 ca, cp = neighbour(ca, cp)

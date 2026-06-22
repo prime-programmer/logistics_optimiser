@@ -16,8 +16,12 @@ def ortools_solve(D, w1_idx, w2_idx, van_rate, lorry_rate, n_stores, time_limit=
         a, b = all_nodes[i], all_nodes[j]
         return int(D[a, b] * 1000)
 
-    # Build manager: 2 depots (W1 and W2)
-    depot_indices = [idx_map[w1_idx], idx_map[w2_idx]]
+  
+    # Build manager: 4 vehicles total (assign 2 to W1, and 2 to W2)
+    depot_indices = [
+        idx_map[w1_idx], idx_map[w1_idx], 
+        idx_map[w2_idx], idx_map[w2_idx]
+    ]
     manager = pywrapcp.RoutingIndexManager(n_nodes, 4, depot_indices, depot_indices)
     routing = pywrapcp.RoutingModel(manager)
 
